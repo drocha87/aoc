@@ -19,24 +19,22 @@ impl Directions {
     }
 }
 
-struct Grid {
+struct Line {
     x: i32,
     y: i32,
-    grid: Vec<(i32, i32, u8)>,
+    l: i32,
+
+    // 0: x coord 1: y coord 2: line length at that point
+    grid: Vec<(i32, i32, i32, u8)>,
 }
 
-impl Grid {
+impl Line {
     fn new() -> Self {
         Self {
             x: 0,
             y: 0,
+            l: 0,
             grid: Vec::new(),
-        }
-    }
-
-    fn print_zero(&self) {
-        if self.x == 0 || self.y == 0 {
-            println!("({}, {})", self.x, self.y);
         }
     }
 
@@ -45,25 +43,29 @@ impl Grid {
             Directions::Right(n) => {
                 for _i in 0..n {
                     self.x += 1;
-                    self.grid.push((self.x, self.y, mark));
+                    self.l += 1;
+                    self.grid.push((self.x, self.y, self.l, mark));
                 }
             }
             Directions::Left(n) => {
                 for _i in 0..n {
                     self.x -= 1;
-                    self.grid.push((self.x, self.y, mark));
+                    self.l += 1;
+                    self.grid.push((self.x, self.y, self.l, mark));
                 }
             }
             Directions::Up(n) => {
                 for _i in 0..n {
                     self.y += 1;
-                    self.grid.push((self.x, self.y, mark));
+                    self.l += 1;
+                    self.grid.push((self.x, self.y, self.l, mark));
                 }
             }
             Directions::Down(n) => {
                 for _i in 0..n {
                     self.y -= 1;
-                    self.grid.push((self.x, self.y, mark));
+                    self.l += 1;
+                    self.grid.push((self.x, self.y, self.l, mark));
                 }
             }
         }
@@ -71,8 +73,6 @@ impl Grid {
 }
 
 pub fn run() {
-    let mut grid = Grid::new();
-
     let wire_one = &[
         "R1000", "D940", "L143", "D182", "L877", "D709", "L253", "U248", "L301", "U434", "R841",
         "U715", "R701", "U92", "R284", "U115", "R223", "U702", "R969", "U184", "L992", "U47",
@@ -135,33 +135,47 @@ pub fn run() {
         "R220",
     ];
 
+    let mut line1 = Line::new();
     for coord in wire_one.iter() {
-        grid.draw_line(Directions::parse(coord), 1);
+        line1.draw_line(Directions::parse(coord), 1);
     }
 
-    grid.x = 0;
-    grid.y = 0;
+    let mut line2 = Line::new();
     for coord in wire_two.iter() {
-        grid.draw_line(Directions::parse(coord), 2);
+        line2.draw_line(Directions::parse(coord), 2);
     }
 
-    grid.grid.sort();
+    line1.grid.extend_from_slice(line2.grid.as_slice());
+    line1.grid.sort();
+
+    println!(
+        "line 1 len {} line 2 len {} : {}",
+        line1.l,
+        line2.l,
+        line1.grid.len()
+    );
+
     let mut lx = 0;
     let mut ly = 0;
     let mut lm = 0;
+    let mut ll = 0;
+    
+    let mut collision: Vec<i32> = Vec::new();
     
     let mut result = 999_999_999;
-    for (x, y, m) in grid.grid.iter() {
+    for (x, y, l, m) in line1.grid.iter() {
         if lx == *x && ly == *y && lm != *m {
-	    println!("{} {} {}", lx, ly, lm);
             let val = x.abs() + y.abs();
             if result > val {
                 result = val;
             }
+	    collision.push(ll + *l);
         }
-        lx = *x;
-        ly = *y;
+	lx = *x;
+	ly = *y;
 	lm = *m;
+	ll = *l;
     }
-    println!("Shorter distance: {}", result);
+    collision.sort();
+    println!("Shorter distance: {} -> {}", result, collision.get(0).unwrap());
 }
