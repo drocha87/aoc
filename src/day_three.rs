@@ -24,7 +24,7 @@ struct Line {
     y: i32,
     l: i32,
 
-    // 0: x coord 1: y coord 2: line length at that point
+    // 0: x coord 1: y coord 2: line length at that point 3: mark
     grid: Vec<(i32, i32, i32, u8)>,
 }
 
@@ -159,9 +159,9 @@ pub fn run() {
     let mut ly = 0;
     let mut lm = 0;
     let mut ll = 0;
-    
+
     let mut collision: Vec<i32> = Vec::new();
-    
+
     let mut result = 999_999_999;
     for (x, y, l, m) in line1.grid.iter() {
         if lx == *x && ly == *y && lm != *m {
@@ -169,13 +169,17 @@ pub fn run() {
             if result > val {
                 result = val;
             }
-	    collision.push(ll + *l);
+            collision.push(ll + *l);
         }
-	lx = *x;
-	ly = *y;
-	lm = *m;
-	ll = *l;
+        lx = *x;
+        ly = *y;
+        lm = *m;
+        ll = *l;
     }
     collision.sort();
-    println!("Shorter distance: {} -> {}", result, collision.get(0).unwrap());
+    println!(
+        "Part One: {}\nPart Two: {}",
+        result,
+        collision.get(0).unwrap()
+    );
 }
